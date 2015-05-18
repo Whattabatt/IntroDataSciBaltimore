@@ -14,6 +14,8 @@ I'm going to do a very simple analysis of Baltimore crime to show off R. We'll u
 
 Let's load the data:
 ```{r}
+
+#
 arrest_tab=read.csv("BPD_Arrests.csv", stringsAsFactors=FALSE)
 cctv_tab=read.csv("CCTV_Locations.csv", stringsAsFactors=FALSE)
 
@@ -21,7 +23,10 @@ cctv_tab=read.csv("CCTV_Locations.csv", stringsAsFactors=FALSE)
 tmp=arrest_tab$sex
 arrest_tab$sex=arrest_tab$race
 arrest_tab$race=tmp
+
 ```
+
+  
 
 ### Exploring data
 
@@ -472,3 +477,37 @@ kpai()
 
 What did you observe? I was surprised to find that most of the arrests made some distance away from the cluster of police stations were for white people. It would be interesting to investigate what kinds of crimes might have been committed so far away from the stations, and why white people stand out as being arrested at that distance, especially in the east.
 
+
+
+
+#### David Graham, D.J. DeBrakeleer
+What question are you asking?: Is there an increase in crimes during the summer months relative to the rest of the year?
+
+```{r dgraham}
+
+require(zoo)
+date<-as.Date(strptime(arrest_tab$arrestDate,"%m/%d/%Y"))
+date=cut(date,breaks="quarter")
+date=gsub("201.-","",date)
+
+df=as.data.frame(table(date))
+ggplot(data=df,aes(x=factor(date,labels=c("Winter", "Spring", "Summer", "Fall")),y=Freq,fill=date))+geom_bar(stat="identity")+guides(fill=FALSE)+xlab("Seasons (2011-2012)")+ylab("Total Arrests")
+
+````
+
+These results seem to suggest that the common knowledge that crime increases during summer months. But it seems likely that this would have its biggest influence on violent crimes caused by stress. For lack of a better tool, we will now look at the rate of crimes whose descriptions include the word "Murder"
+
+
+```{r}
+murder_tab=subset(arrest_tab,grepl("Murder",chargeDescription))
+mdate<-as.Date(strptime(murder_tab$arrestDate,"%m/%d/%Y"))
+mdate=cut(mdate,breaks="quarter")
+mdate=gsub("201.-","",mdate)
+
+
+df=as.data.frame(table(mdate))
+ggplot(data=df,aes(x=factor(mdate,labels=c("Winter", "Spring", "Summer", "Fall") ),y=Freq,fill=mdate) )+geom_bar(stat="identity")+guides(fill=FALSE)+xlab("Seasons (2011-2012)")+ylab("'Murder' Arrests")
+
+```
+
+What did you observe? This plot shows that, in this data set at least, there is definitely not more 'murder' related arrests in colder seasons vs warmer ones. This provides evidence against the hypothesis that there are more violent crimes in the summer as a result of the heat. A better, more rigorous version of this examination would do a statistical analysis of crime rates as a function of temperature.
